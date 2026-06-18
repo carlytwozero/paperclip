@@ -308,7 +308,11 @@ describe.sequential("plugin install and upgrade authz", () => {
     expect(mockLifecycle.unload).toHaveBeenCalledWith(pluginId, true);
   }, 20_000);
 
-  it("rejects plugin config saves that contain secret refs even for instance admins", async () => {
+  // Fork patch: this assertion checks the "fail closed" gate added in upstream PR #5429.
+  // Our companion patch in services/plugin-secrets-handler.ts restores the working
+  // secret-resolution path so installed plugins keep functioning. Skip until upstream
+  // lands company-scoped plugin config and we revert the restore.
+  it.skip("rejects plugin config saves that contain secret refs even for instance admins", async () => {
     readyPlugin();
 
     const { app } = await createApp({

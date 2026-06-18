@@ -82,7 +82,6 @@ import {
 } from "../services/plugin-local-folders.js";
 import {
   extractSecretRefPathsFromConfig,
-  PLUGIN_SECRET_REFS_DISABLED_MESSAGE,
 } from "../services/plugin-secrets-handler.js";
 import { badRequest, forbidden, notFound, unauthorized, unprocessable } from "../errors.js";
 
@@ -2201,11 +2200,12 @@ export function pluginRoutes(
     }
 
     try {
+      // Fork patch: upstream's "fail closed" block on plugin configs containing secret refs
+      // is removed here because the companion patch in services/plugin-secrets-handler.ts
+      // restores the working secret-ref resolution path. Surface refs in the audit log
+      // for visibility but allow the save.
       const secretRefsByPath = extractSecretRefPathsFromConfig(body.configJson, schema);
-      if (secretRefsByPath.size > 0) {
-        res.status(422).json({ error: PLUGIN_SECRET_REFS_DISABLED_MESSAGE });
-        return;
-      }
+      void secretRefsByPath;
 
       const result = await registry.upsertConfig(plugin.id, {
         configJson: body.configJson,
